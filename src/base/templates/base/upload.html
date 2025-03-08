@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Image</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: linear-gradient(135deg, #ade8f4, #90e0ef);
+            padding: 20px;
+        }
+        .container {
+            max-width: 400px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        video, canvas, img {
+            width: 100%;
+            border-radius: 10px;
+        }
+        .controls {
+            margin-top: 15px;
+        }
+        button {
+            background: #0077b6;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #005f87;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Capture & Predict</h2>
+        <video id="video" autoplay></video>
+        <canvas id="canvas" style="display:none;"></canvas>
+        <img id="capturedImage" style="display:none;">
+        <div class="controls">
+            <button id="capture">Capture</button>
+            <button id="retake" style="display:none;">Retake</button>
+            <button id="upload" style="display:none;">Upload & Predict</button>
+        </div>
+        <div id="result" style="margin-top: 20px;"></div>
+    </div>
+    
+    
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const captureBtn = document.getElementById('capture');
+        const retakeBtn = document.getElementById('retake');
+        const uploadBtn = document.getElementById('upload');
+        const capturedImage = document.getElementById('capturedImage');
+        
+        // Start camera
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+            } catch (err) {
+                console.error("Error accessing camera:", err);
+            }
+        }
+        
+        startCamera();
+
+        captureBtn.addEventListener('click', () => {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            capturedImage.src = canvas.toDataURL('image/png');
+            video.style.display = 'none';
+            capturedImage.style.display = 'block';
+            captureBtn.style.display = 'none';
+            retakeBtn.style.display = 'inline';
+            uploadBtn.style.display = 'inline';
+        });
+
+        retakeBtn.addEventListener('click', () => {
+            video.style.display = 'block';
+            capturedImage.style.display = 'none';
+            captureBtn.style.display = 'inline';
+            retakeBtn.style.display = 'none';
+            uploadBtn.style.display = 'none';
+            document.getElementById('result').innerHTML = '';
+        });
+
+        uploadBtn.addEventListener('click', () => {
+            canvas.toBlob(blob => {
+                const formData = new FormData();
+                formData.append('image', blob, 'captured.png');
+                
+                uploadBtn.disabled = true;
+                uploadBtn.textContent = 'Processing...';
+                
+                fetch('/predict/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                    document.getElementById('result').innerHTML = 
+                        `<p>Prediction: <strong>${data.class_name}</strong></p>
+                         <p>Confidence: <strong>${data.confidence}%</strong></p>`;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('result').innerHTML = 
+                        `<p style="color: red;">Error: ${error.message}</p>`;
+                })
+                .finally(() => {
+                    uploadBtn.disabled = false;
+                    uploadBtn.textContent = 'Upload & Predict';
+                });
+            }, 'image/png');
+        });
+        // Add CSRF token helper function
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+
+    
+    
+</body>
+</html>

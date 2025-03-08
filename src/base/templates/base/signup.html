@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up</title>
+  {% block content %}
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(to right, #04364A, #176B87);
+      color: white;
+    }
+    .container {
+      text-align: center;
+      background: rgba(6, 70, 99, 0.9);
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+      width: 90%;
+      max-width: 500px;
+      position: relative;
+    }
+    .input-group {
+      margin: 15px 0;
+      text-align: left;
+    }
+    label {
+      display: block;
+      font-size: 16px;
+      margin-bottom: 5px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #dcd9d9;
+      border-radius: 5px;
+      background: #064663;
+      color: white;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      color: white;
+      background-color: #ff6600;
+    }
+    .btn:hover {
+      opacity: 0.8;
+    }
+    .login-link {
+      color: #ff6600;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 10px;
+      display: inline-block;
+    }
+    .login-link:hover {
+      text-decoration: underline;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+    }
+    .row .input-group {
+      width: 49%;
+    }
+    .error {
+      color: red;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+    <div class="container">
+      <h2 >Sign Up</h2>
+      <br>
+      <h5>Fill all the fields with your correct information</h5>
+      
+      <form method="POST" action="{% url 'register' %}">
+        {% csrf_token %}
+
+        <div class="row">
+          <div class="input-group">
+            <label for="firstname">First Name</label>
+            <input type="text" id="firstname" name="firstname" placeholder="Enter your first name" value="{{ form.firstname.value|default_if_none:'' }}" required>
+            {% if form.firstname.errors %}
+              <div class="error">{% for error in form.firstname.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+          <div class="input-group">
+            <label for="lastname">Last Name</label>
+            <input type="text" id="lastname" name="lastname" placeholder="Enter your last name" value="{{ form.lastname.value|default_if_none:'' }}" required>
+            {% if form.lastname.errors %}
+              <div class="error">{% for error in form.lastname.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" placeholder="Enter your email address" value="{{ form.email.value|default_if_none:'' }}" required>
+          {% if form.email.errors %}
+            <div class="error">{% for error in form.email.errors %}<p>{{ error }}</p>{% endfor %}</div>
+          {% endif %}
+        </div>
+
+        <div class="input-group">
+          <label for="phonenumber">Phone Number</label>
+          <input type="text" id="phonenumber" name="mobile" placeholder="Enter your phone number" value="{{ form.mobile.value|default_if_none:'' }}" required>
+          {% if form.mobile.errors %}
+            <div class="error">{% for error in form.mobile.errors %}<p>{{ error }}</p>{% endfor %}</div>
+          {% endif %}
+        </div>
+
+        <div class="input-group">
+          <label for="password">Password</label>
+          <div style="position: relative;">
+            <input type="password" id="password" name="password1" placeholder="Enter your password" value="{{ form.password1.value|default_if_none:'' }}" required>
+            <span class="toggle-password" onclick="togglePassword('password')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;">👁️</span>
+          </div>
+          {% if form.password1.errors %}
+            <div class="error">{% for error in form.password1.errors %}<p>{{ error }}</p>{% endfor %}</div>
+          {% endif %}
+        </div>
+
+        <div class="input-group">
+          <label for="confirm-password">Confirm Password</label>
+          <div style="position: relative;">
+            <input type="password" id="confirm-password" name="password2" placeholder="Confirm your password" value="{{ form.password2.value|default_if_none:'' }}" required>
+            <span class="toggle-password" onclick="togglePassword('confirm-password')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;">👁️</span>
+          </div>
+          {% if form.password2.errors %}
+            <div class="error">{% for error in form.password2.errors %}<p>{{ error }}</p>{% endfor %}</div>
+          {% endif %}
+        </div>
+
+        <button type="submit" class="btn">Sign Up</button>
+
+        {% if form.non_field_errors %}
+          <div class="error">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>
+        {% endif %}
+      </form>
+      <br>
+      <a class="login-link" href="{% url 'login' %}">Already have an account? Log in</a>
+    </div>
+  {% endblock content %}
+</body>
+<script>
+    function togglePassword(fieldId) {
+      var passwordField = document.getElementById(fieldId);
+      passwordField.type = passwordField.type === "password" ? "text" : "password";
+    }
+</script>
+</html>
