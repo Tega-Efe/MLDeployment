@@ -25,9 +25,24 @@ SECRET_KEY = 'django-insecure-lng7w3+xz=z%m^1e)&!x!brfd_iz6vhf!$!=a2@lnjvjs_6feg
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['172.20.10.3','192.168.56.1', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['172.20.10.3','192.168.56.1', 'localhost', '127.0.0.1', '.ngrok.io','.ngrok-free.app']
+
+# Add CSRF trusted origins for ngrok
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.ngrok-free.app',
+    'https://*.ngrok.io',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
 
 
+# Update CORS settings
+CORS_ALLOWED_ORIGINS = [
+    'https://*.ngrok-free.app',
+    'https://*.ngrok.io',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
 # Application definition
 
 INSTALLED_APPS = [
@@ -38,9 +53,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'base.apps.BaseConfig',
+    'corsheaders',
+   
+    
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -121,18 +140,18 @@ LOGIN_REDIRECT_URL = 'dashboard'
 
 STATIC_URL = 'static/'
 AUTH_USER_MODEL = 'base.CustomUser'
+# Security settings for development with ngrok
+SECURE_SSL_REDIRECT = False  # Keep false for local development
+SECURE_BROWSER_XSS_FILTER = True  # Keep this enabled
+SECURE_CONTENT_TYPE_NOSNIFF = True  # Keep this enabled
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None  # Required for camera access
 
-# Security settings - disabled in development
-SECURE_SSL_REDIRECT = False
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
+# CORS settings - required for ngrok
+CORS_ALLOW_ALL_ORIGINS = True  # Required for ngrok in development
+CORS_ALLOW_CREDENTIALS = True  # Required for session handling
+X_FRAME_OPTIONS = 'SAMEORIGIN'  # Required for iframe support if needed
 
-# CORS settings
-X_FRAME_OPTIONS = 'SAMEORIGIN'
-CORS_ALLOW_ALL_ORIGINS = True  # Only in development
-CORS_ALLOW_CREDENTIALS = True
+
 
 
 MEDIA_URL = '/media/'

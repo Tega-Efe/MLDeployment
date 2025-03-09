@@ -5,23 +5,38 @@
     .upload-container {
         display: flex;
         justify-content: center;
-        
         min-height: 70vh;
-        padding-top: 76px;
+        padding: 76px 20px 20px;
+        box-sizing: border-box;
     }
     .camera-box {
-        max-width: 400px;
+        max-width: 640px;
         width: 100%;
         background: rgba(6, 70, 99, 0.9);
         padding: 20px;
         border-radius: 10px;
         box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
         text-align: center;
+        box-sizing: border-box;
+        overflow: hidden;
     }
-    video, canvas, img {
+    .camera-container {
         width: 100%;
+        position: relative;
+        padding-top: 75%; /* 4:3 Aspect Ratio */
+        overflow: hidden;
+        background: #000;
         border-radius: 10px;
         margin-bottom: 15px;
+    }
+    video, canvas, #capturedImage {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 10px;
     }
     .controls {
         margin-top: 15px;
@@ -30,7 +45,7 @@
         background: linear-gradient(to right, #d3921a, #f7ad3e);
         color: #04364A;
         border: none;
-        padding: 10px 20px;
+        padding: 8px 20px;
         border-radius: 5px;
         cursor: pointer;
         font-weight: bold;
@@ -53,12 +68,12 @@
     #result {
         margin-top: 20px;
         color: white;
+        padding: 10px;
     }
     .result-label {
         font-weight: 600;
         color: white;
     }
-    
     #result strong {
         color: #FFA500;
         font-weight: 600;
@@ -66,14 +81,24 @@
     button i {
         font-size: 1.2rem;
     }
+    @media (max-width: 680px) {
+        .upload-container {
+            padding: 76px 10px 10px;
+        }
+        .camera-box {
+            padding: 10px;
+        }
+    }
 </style>
 
 <div class="upload-container">
     <div class="camera-box">
         <h2>Capture & Predict</h2>
-        <video id="video" autoplay></video>
-        <canvas id="canvas" style="display:none;"></canvas>
-        <img id="capturedImage" style="display:none;">
+        <div class="camera-container">
+            <video id="video" autoplay playsinline></video>
+            <canvas id="canvas" style="display:none;"></canvas>
+            <img id="capturedImage" style="display:none;">
+        </div>
         <div class="controls">
             <button id="capture">Capture <i class="bi bi-webcam"></i></button>
             <button id="retake" style="display:none;">Retake</button>
@@ -91,29 +116,147 @@
     const retakeBtn = document.getElementById('retake');
     const uploadBtn = document.getElementById('upload');
     const capturedImage = document.getElementById('capturedImage');
-    
-    // Start camera
+
+    const CAPTURE_WIDTH = 640;
+    const CAPTURE_HEIGHT = 480;
+
     async function startCamera() {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            video.srcObject = stream;
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            
+            let constraints = {
+                video: {
+                    width: { ideal: CAPTURE_WIDTH },
+                    height: { ideal: CAPTURE_HEIGHT },
+                    facingMode: isMobile ? "environment" : "user",
+                    aspectRatio: { ideal: 4/3 }
+                }
+            };
+
+            if (isIOS) {
+                video.setAttribute('playsinline', true);
+                video.setAttribute('webkit-playsinline', true);
+            }
+
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            handleSuccess(stream);
         } catch (err) {
-            console.error("Error accessing camera:", err);
+            console.log("Falling back to basic camera settings");
+            try {
+                const fallbackStream = await navigator.mediaDevices.getUserMedia({
+                    video: true
+                });
+                handleSuccess(fallbackStream);
+            } catch (fallbackErr) {
+                handleError(fallbackErr);
+            }
         }
     }
-    
-    startCamera();
 
+    function handleSuccess(stream) {
+        video.srcObject = stream;
+        
+        video.onloadedmetadata = () => {
+            canvas.width = CAPTURE_WIDTH;
+            canvas.height = CAPTURE_HEIGHT;
+            
+            video.play()
+                .then(() => {
+                    console.log("Camera started successfully");
+                })
+                .catch(err => {
+                    console.error("Playback failed:", err);
+                    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                        document.getElementById('result').innerHTML = 
+                            `<p style="color: orange;">Tap the video area to start the camera</p>`;
+                    }
+                });
+        };
+
+        video.addEventListener('click', () => {
+            video.play().catch(console.error);
+        });
+    }
+
+    function handleError(error) {
+        console.error("Camera error:", error);
+        document.getElementById('result').innerHTML = 
+            `<p style="color: red;">Camera Error: ${error.message}<br>
+            Please ensure camera permissions are granted and you're using a supported browser.</p>`;
+    }
+
+    if (window.isSecureContext === false) {
+        document.getElementById('result').innerHTML = 
+            `<p style="color: orange;">This page should be accessed via HTTPS or localhost for camera access.</p>`;
+    }
+    
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        document.getElementById('result').innerHTML = 
+            `<p style="color: red;">Your browser doesn't support camera access.</p>`;
+    } else {
+        startCamera();
+    }
+
+    // In upload.html, update the capture event listener:
     captureBtn.addEventListener('click', () => {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        capturedImage.src = canvas.toDataURL('image/png');
-        video.style.display = 'none';
-        capturedImage.style.display = 'block';
-        captureBtn.style.display = 'none';
-        retakeBtn.style.display = 'inline';
-        uploadBtn.style.display = 'inline';
+        try {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = CAPTURE_WIDTH;
+            tempCanvas.height = CAPTURE_HEIGHT;
+            const tempCtx = tempCanvas.getContext('2d');
+
+            // Calculate scaling to maintain aspect ratio and center crop
+            const videoAspect = video.videoWidth / video.videoHeight;
+            const targetAspect = CAPTURE_WIDTH / CAPTURE_HEIGHT;
+            
+            let sw, sh, sx, sy;
+            if (videoAspect > targetAspect) {
+                sh = video.videoHeight;
+                sw = sh * targetAspect;
+                sy = 0;
+                sx = (video.videoWidth - sw) / 2;
+            } else {
+                sw = video.videoWidth;
+                sh = sw / targetAspect;
+                sx = 0;
+                sy = (video.videoHeight - sh) / 2;
+            }
+
+            // Draw with center crop
+            tempCtx.drawImage(video, sx, sy, sw, sh, 0, 0, CAPTURE_WIDTH, CAPTURE_HEIGHT);
+
+            // Ensure grayscale conversion matches training
+            const imageData = tempCtx.getImageData(0, 0, CAPTURE_WIDTH, CAPTURE_HEIGHT);
+            const data = imageData.data;
+            
+            // Convert to grayscale using same weights as cv2
+            for (let i = 0; i < data.length; i += 4) {
+                const gray = (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114);
+                data[i] = data[i + 1] = data[i + 2] = gray;
+            }
+            tempCtx.putImageData(imageData, 0, 0);
+
+            // Copy to main canvas
+            canvas.width = CAPTURE_WIDTH;
+            canvas.height = CAPTURE_HEIGHT;
+            ctx.drawImage(tempCanvas, 0, 0);
+            
+            if (imageData.data.some(pixel => pixel !== 0)) {
+                capturedImage.src = canvas.toDataURL('image/png');
+                video.style.display = 'none';
+                capturedImage.style.display = 'block';
+                captureBtn.style.display = 'none';
+                retakeBtn.style.display = 'inline';
+                uploadBtn.style.display = 'inline';
+            } else {
+                throw new Error("Failed to capture image");
+            }
+        } catch (err) {
+            console.error("Capture error:", err);
+            document.getElementById('result').innerHTML = 
+                `<p style="color: red;">Failed to capture image. Please try again.</p>`;
+        }
     });
 
     retakeBtn.addEventListener('click', () => {
@@ -152,7 +295,7 @@
             .catch(error => {
                 console.error('Error:', error);
                 document.getElementById('result').innerHTML = 
-                    `<p style="color: red;">Error: ${error.message}</p>`;
+                    `<p style="color: #ff6600;">Prediction Error: ${error.message}</p>`;
             })
             .finally(() => {
                 uploadBtn.disabled = false;
