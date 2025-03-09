@@ -1,5 +1,5 @@
 # Create your views here.
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.contrib.auth import login, logout
 from django.views.generic.edit import FormView
@@ -17,12 +17,6 @@ import os
 import pandas as pd
 from django.views import View
 from .models import Prediction, CustomUser
-
-from django.shortcuts import render, redirect
-from django.urls import reverse_lazy
-from django.contrib.auth import login
-from django.views.generic.edit import FormView
-from .forms import CustomAuthenticationForm
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"  # Suppress TensorFlow logs
 
@@ -57,15 +51,8 @@ class CustomLoginView(FormView):
     def get_success_url(self):
         return reverse_lazy('dashboard')
 
-    
-from django.shortcuts import redirect
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView
-from django.shortcuts import redirect
-from django.contrib import messages
-from .models import Prediction
 
-class Dashboard(ListView):
+class Dashboard(LoginRequiredMixin,ListView):
     model = Prediction
     template_name = 'base/dashboard.html'
     context_object_name = 'predictions'
@@ -99,6 +86,12 @@ class Dashboard(ListView):
 
         return context
 
+def delete_prediction(request, prediction_id):
+    if request.method == "POST":
+        prediction = get_object_or_404(Prediction, id=prediction_id, user=request.user)
+        prediction.delete()
+        return JsonResponse({"status": "success", "message": "Prediction deleted successfully"})
+    return JsonResponse({"status": "error", "message": "Invalid request"}, status=400)
 
 
 

@@ -9,6 +9,7 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('upload/', views.PredictImageView.as_view(), name='predictor'),
     path('predict/', views.PredictImageView.as_view(), name='predict'),
+    path('delete-prediction/<int:prediction_id>/', views.delete_prediction, name='delete_prediction'),
 ]
 
 

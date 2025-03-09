@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-lng7w3+xz=z%m^1e)&!x!brfd_iz6vhf!$!=a2@lnjvjs_6feg
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['172.20.10.3','192.168.56.1', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -122,7 +122,18 @@ LOGIN_REDIRECT_URL = 'dashboard'
 STATIC_URL = 'static/'
 AUTH_USER_MODEL = 'base.CustomUser'
 
-# ...existing code...
+# Security settings - disabled in development
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# CORS settings
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+CORS_ALLOW_ALL_ORIGINS = True  # Only in development
+CORS_ALLOW_CREDENTIALS = True
+
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
