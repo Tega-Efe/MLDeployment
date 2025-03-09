@@ -119,6 +119,8 @@ class RegisterPage(FormView):
             return redirect('dashboard')
         return super(RegisterPage, self).get(*args, **kwargs)
 
+def about(request):
+    return render(request, 'base/about.html')
 
 def logout_view(request):
     if request.method == 'POST':

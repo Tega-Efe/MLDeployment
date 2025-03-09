@@ -42,12 +42,19 @@
 
     .card-title {
         color: #FFA500;
+        font-weight: bold;
     }
 
-    .btn-primary {
-        background: #FFA500;
+    .btn {
+        background: linear-gradient(to right, #d3921a, #f7ad3e);
+        color: #04364A;
         border: none;
         border-radius: 8px;
+        font-weight: bold;
+    }
+
+    .btn i {
+        font-size:1rem;
     }
 
     .dashboard-header {
@@ -73,6 +80,26 @@
         font-weight: bold;
         color: #FFA500;
     }
+
+    .card-footer-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 10px;
+    }
+
+    .delete-btn {
+        padding: 5px 10px;
+        font-size: 14px;
+        min-width: 40px;
+        height: 35px;
+    }
+
+    .prediction-date {
+        color: #fff !important;
+        font-size: 0.9rem;
+        margin: 0; /* Remove default paragraph margin */
+    }
 </style>
 
 <div class="dashboard-container">
@@ -81,7 +108,7 @@
             <h2>Welcome, {{ user.firstname }} {{ user.lastname }}!</h2>
             {% if request.user.is_authenticated %}
             <div>
-                <a style="background-color: #FFB84D; color: #fff;" href="{% url 'predictor' %}" class="btn  mb-2">Capture Sign</a>
+                <a href="{% url 'predictor' %}" class="btn  mb-2">Capture Sign <i class="bi bi-camera"></i></a>
                 <form id="logout-form" action="{% url 'logout' %}" method="POST" class="d-inline">
                     {% csrf_token %}
                 </form>
@@ -93,7 +120,7 @@
             <div class="col-md-6 offset-md-3">
                 <div class="card stats-card">
                     <h5 class="card-title">Statistics</h5>
-                    <p>Total Signs Analyzed: {{ prediction_count }}</p>
+                    <p style="font-weight: 500;">Total Signs Analyzed: {{ prediction_count }}</p>
                 </div>
             </div>
         </div>
@@ -110,10 +137,12 @@
                                 <div class="card-body">
                                     <h5 class="card-title">{{ prediction.predicted_class }}</h5>
                                     <p class="card-text">Confidence: <span class="confidence-value">{{ prediction.confidence|floatformat:2 }}%</span></p>
-                                    <p class="card-text prediction-date">{{ prediction.timestamp|date:"F d, Y" }}</p>
-                                    <button class="btn btn-danger delete-btn" data-id="{{ prediction.id }}">
-                                        <i class="fas fa-trash">D</i>
-                                    </button>
+                                    <div class="card-footer-flex">
+                                        <p class="card-text prediction-date">{{ prediction.timestamp|date:"F d, Y • g:i A" }}</p>
+                                        <button style="background: #ff6600;" class="btn delete-btn" data-id="{{ prediction.id }}">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

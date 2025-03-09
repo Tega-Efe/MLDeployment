@@ -24,8 +24,14 @@
         position: relative;
         margin: 20px 0;
         text-align: left;
-        padding-top: 15px;
     }
+
+    .input-field-container {
+        position: relative;
+        padding-top: 15px;
+        width: 100%;
+    }
+
     .input-group input {
         width: 100%;
         padding: 12px 10px;
@@ -144,20 +150,24 @@
         <form method="POST" action="{% url 'login' %}">
             {% csrf_token %}
             <div class="input-group">
+              <div class="input-field-container">
                 <input type="text" id="username" name="username" placeholder=" " required>
                 <label for="username">Username</label>
-                {% if form.username.errors %}
-                    <div class="error">
-                        {% for error in form.username.errors %}
-                            <p>{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                {% endif %}
+              </div>
+              {% if form.username.errors %}
+                  <div class="error">
+                      {% for error in form.username.errors %}
+                          <p>{{ error }}</p>
+                      {% endfor %}
+                  </div>
+              {% endif %}
             </div>
 
             <div class="input-group">
-              <input type="password" id="password" name="password" placeholder=" " required>
-              <label for="password">Password</label>
+              <div class="input-field-container">
+                <input type="password" id="password" name="password" placeholder=" " required>
+                <label for="password">Password</label>
+              </div>
               <button type="button" class="toggle-password" onclick="togglePassword('password')">
                   <i class="bi bi-eye"></i>
                   <i class="bi bi-eye-slash"></i>

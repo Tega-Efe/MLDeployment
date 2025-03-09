@@ -27,7 +27,7 @@
         margin-top: 15px;
     }
     button {
-        background: #FFA500;
+        background: linear-gradient(to right, #d3921a, #f7ad3e);
         color: #04364A;
         border: none;
         padding: 10px 20px;
@@ -48,13 +48,23 @@
     h2 {
         color: #FFA500;
         margin-bottom: 20px;
+        font-weight: 600;
     }
     #result {
         margin-top: 20px;
         color: white;
     }
+    .result-label {
+        font-weight: 600;
+        color: white;
+    }
+    
     #result strong {
         color: #FFA500;
+        font-weight: 600;
+    }
+    button i {
+        font-size: 1.2rem;
     }
 </style>
 
@@ -65,7 +75,7 @@
         <canvas id="canvas" style="display:none;"></canvas>
         <img id="capturedImage" style="display:none;">
         <div class="controls">
-            <button id="capture">Capture</button>
+            <button id="capture">Capture <i class="bi bi-webcam"></i></button>
             <button id="retake" style="display:none;">Retake</button>
             <button id="upload" style="display:none;">Upload & Predict</button>
         </div>
@@ -136,8 +146,8 @@
                     throw new Error(data.error);
                 }
                 document.getElementById('result').innerHTML = 
-                    `<p>Prediction: <strong>${data.class_name}</strong></p>
-                     <p>Confidence: <strong>${data.confidence}%</strong></p>`;
+                    `<p><span class="result-label">Prediction:</span> <strong>${data.class_name}</strong></p>
+                    <p><span class="result-label">Confidence:</span> <strong>${parseFloat(data.confidence).toFixed(2)}%</strong></p>`;
             })
             .catch(error => {
                 console.error('Error:', error);
